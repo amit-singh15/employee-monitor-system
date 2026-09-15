@@ -1,0 +1,69 @@
+name: Build Multi-OS Desktop Agent Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: desktop_agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller pyobjc-framework-Quartz pyobjc-framework-Cocoa
+      - name: Build package
+        run: |
+          chmod +x packaging/build_macos.sh
+          ./packaging/build_macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ActivityTracker-macos
+          path: desktop_agent/release/ActivityTracker-macos.zip
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop_agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller pywin32
+      - name: Build package
+        run: packaging\build_windows.bat
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ActivityTracker-windows
+          path: desktop_agent/release/ActivityTracker-windows.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop_agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y x11-utils xdotool
+          pip install -r requirements.txt pyinstaller
+      - name: Build package
+        run: |
+          chmod +x packaging/build_linux.sh
+          ./packaging/build_linux.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ActivityTracker-linux
+          path: desktop_agent/release/ActivityTracker-linux.zip
